@@ -1,16 +1,16 @@
 
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   Menu, 
   User, 
   CloudSun, 
   ChartBar, 
   X, 
-  Book,
-  Upload,
-  ShoppingBag
+  ShoppingBag,
+  Plus,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,17 +41,29 @@ const SidebarItem = ({ icon, label, to, active, onClick }: SidebarItemProps) => 
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activePath, setActivePath] = useState('/dashboard/profile');
+  const location = useLocation();
   const { userType, setUserType } = useUser();
   const navigate = useNavigate();
 
+  // Use pathname and search to determine active path, so Add New Item in sidebar also works
+  const activePath = location.pathname + location.search;
+
   const toggleSidebar = () => setIsOpen(!isOpen);
-  
+
   const handleItemClick = (path: string) => {
-    setActivePath(path);
+    // For the "Add New Item" sidebar nav, path includes query, so we go to that link
+    navigate(path);
     if (window.innerWidth < 768) {
       setIsOpen(false);
     }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    // Clear localStorage (userType, etc) and redirect
+    localStorage.removeItem('userType');
+    setUserType(null);
+    navigate("/");
   };
 
   return (
@@ -99,23 +111,30 @@ export default function Sidebar() {
                 <SidebarItem 
                   icon={<User className="h-5 w-5" />} 
                   label="My Profile" 
-                  to="/dashboard/profile" 
-                  active={activePath === '/dashboard/profile'}
-                  onClick={() => handleItemClick('/dashboard/profile')}
+                  to="/dashboard/profile"
+                  active={activePath.startsWith("/dashboard/profile") && !activePath.includes("addItem=1")}
+                  onClick={() => handleItemClick("/dashboard/profile")}
+                />
+                <SidebarItem
+                  icon={<Plus className="h-5 w-5" />}
+                  label="Add New Item"
+                  to="/dashboard/profile?addItem=1"
+                  active={activePath === "/dashboard/profile?addItem=1"}
+                  onClick={() => handleItemClick("/dashboard/profile?addItem=1")}
                 />
                 <SidebarItem 
                   icon={<CloudSun className="h-5 w-5" />} 
                   label="Weather Analysis" 
                   to="/dashboard/weather" 
-                  active={activePath === '/dashboard/weather'}
-                  onClick={() => handleItemClick('/dashboard/weather')}
+                  active={activePath.startsWith("/dashboard/weather")}
+                  onClick={() => handleItemClick("/dashboard/weather")}
                 />
                 <SidebarItem 
                   icon={<ChartBar className="h-5 w-5" />} 
                   label="Market Price Analysis" 
                   to="/dashboard/market" 
-                  active={activePath === '/dashboard/market'}
-                  onClick={() => handleItemClick('/dashboard/market')}
+                  active={activePath.startsWith("/dashboard/market")}
+                  onClick={() => handleItemClick("/dashboard/market")}
                 />
               </nav>
             ) : (
@@ -124,14 +143,14 @@ export default function Sidebar() {
                   icon={<User className="h-5 w-5" />} 
                   label="My Profile" 
                   to="/dashboard/consumer-profile" 
-                  active={activePath === '/dashboard/consumer-profile'}
+                  active={activePath.startsWith('/dashboard/consumer-profile')}
                   onClick={() => handleItemClick('/dashboard/consumer-profile')}
                 />
                 <SidebarItem 
                   icon={<ShoppingBag className="h-5 w-5" />} 
                   label="Marketplace" 
                   to="/dashboard/marketplace" 
-                  active={activePath === '/dashboard/marketplace'}
+                  active={activePath.startsWith('/dashboard/marketplace')}
                   onClick={() => handleItemClick('/dashboard/marketplace')}
                 />
               </nav>
@@ -143,14 +162,10 @@ export default function Sidebar() {
             <Button 
               variant="outline" 
               className="w-full bg-transparent border-white text-white hover:bg-white hover:text-custom-green"
-              onClick={() => {
-                const newType = userType === "farmer" ? "consumer" : "farmer";
-                setUserType(newType);
-                const redirectPath = newType === "farmer" ? "/dashboard/profile" : "/dashboard/consumer-profile";
-                navigate(redirectPath);
-              }}
+              onClick={handleLogout}
             >
-              Switch to {userType === "farmer" ? "Consumer" : "Farmer"}
+              <LogOut className="h-4 w-4 mr-2" />
+              Log out
             </Button>
           </div>
         </div>

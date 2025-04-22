@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useItems, Item } from "@/contexts/ItemContext";
 import { Trash2, Upload, Image } from "lucide-react";
 import {
@@ -20,12 +20,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  // DialogTrigger, // Removed, we don't trigger from inside page
 } from "@/components/ui/dialog";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 export default function FarmerProfile() {
   const { items, addItem, deleteItem } = useItems();
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [newItem, setNewItem] = useState<{
     name: string;
     price: string;
@@ -36,111 +36,132 @@ export default function FarmerProfile() {
     image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop",
   });
 
+  // Instead of using state, open dialog if ?addItem=1 is in search params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isFormOpen = searchParams.get("addItem") === "1";
+
+  useEffect(() => {
+    // If the addItem param was just set, reset the form
+    if (isFormOpen) {
+      setNewItem({
+        name: "",
+        price: "",
+        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop",
+      });
+    }
+  }, [isFormOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     addItem({
       name: newItem.name,
       price: parseFloat(newItem.price),
       image: newItem.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop",
     });
-    
+
     setNewItem({
       name: "",
       price: "",
       image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop",
     });
-    
-    setIsFormOpen(false);
+
+    // Remove addItem param and return to profile page
+    searchParams.delete("addItem");
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    // If closed, remove addItem param from URL
+    if (!open) {
+      searchParams.delete("addItem");
+      setSearchParams(searchParams, { replace: true });
+    }
   };
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-custom-green">My Profile</h1>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-custom-green hover:bg-custom-green/90 text-white">
-              <Upload className="mr-2 h-4 w-4" />
-              Add New Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>Upload New Item</DialogTitle>
-                <DialogDescription>
-                  Fill in the details of your new product for sale.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="item-image">Item Image</Label>
-                  <div className="flex items-center gap-2">
-                    <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200">
-                      {newItem.image ? (
-                        <img
-                          src={newItem.image}
-                          alt="Preview"
-                          className="w-full h-full object-cover rounded-md"
-                        />
-                      ) : (
-                        <Image className="h-8 w-8 text-gray-400" />
-                      )}
-                    </div>
-                    <Input
-                      id="item-image"
-                      placeholder="Image URL"
-                      type="text"
-                      value={newItem.image}
-                      onChange={(e) =>
-                        setNewItem((prev) => ({ ...prev, image: e.target.value }))
-                      }
-                      className="flex-1"
-                    />
+      </div>
+
+      {/* Add New Item Dialog triggered by sidebar route */}
+      <Dialog open={isFormOpen} onOpenChange={handleDialogOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleSubmit}>
+            <DialogHeader>
+              <DialogTitle>Upload New Item</DialogTitle>
+              <DialogDescription>
+                Fill in the details of your new product for sale.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="item-image">Item Image</Label>
+                <div className="flex items-center gap-2">
+                  <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200">
+                    {newItem.image ? (
+                      <img
+                        src={newItem.image}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                    ) : (
+                      <Image className="h-8 w-8 text-gray-400" />
+                    )}
                   </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="item-name">Item Name</Label>
                   <Input
-                    id="item-name"
-                    placeholder="e.g., Organic Tomatoes"
-                    required
-                    value={newItem.name}
+                    id="item-image"
+                    placeholder="Image URL"
+                    type="text"
+                    value={newItem.image}
                     onChange={(e) =>
-                      setNewItem((prev) => ({ ...prev, name: e.target.value }))
+                      setNewItem((prev) => ({ ...prev, image: e.target.value }))
                     }
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="item-price">Item Price</Label>
-                  <Input
-                    id="item-price"
-                    placeholder="e.g., 2.99"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    value={newItem.price}
-                    onChange={(e) =>
-                      setNewItem((prev) => ({ ...prev, price: e.target.value }))
-                    }
+                    className="flex-1"
                   />
                 </div>
               </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-custom-green hover:bg-custom-green/90">
-                  Submit
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="item-name">Item Name</Label>
+                <Input
+                  id="item-name"
+                  placeholder="e.g., Organic Tomatoes"
+                  required
+                  value={newItem.name}
+                  onChange={(e) =>
+                    setNewItem((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="item-price">Item Price</Label>
+                <Input
+                  id="item-price"
+                  placeholder="e.g., 2.99"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={newItem.price}
+                  onChange={(e) =>
+                    setNewItem((prev) => ({ ...prev, price: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" className="bg-custom-green hover:bg-custom-green/90">
+                Submit
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-6">
         <h2 className="text-2xl font-semibold text-gray-800">My Item List</h2>
-        
+
         {items.length === 0 ? (
           <Card className="border-dashed border-2 p-6 text-center">
             <p className="text-gray-500">You haven't added any items yet.</p>
