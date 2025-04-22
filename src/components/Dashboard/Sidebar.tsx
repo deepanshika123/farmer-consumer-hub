@@ -51,7 +51,6 @@ export default function Sidebar() {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const handleItemClick = (path: string) => {
-    // For the "Add New Item" sidebar nav, path includes query, so we go to that link
     navigate(path);
     if (window.innerWidth < 768) {
       setIsOpen(false);
@@ -60,7 +59,6 @@ export default function Sidebar() {
 
   // Handle logout
   const handleLogout = () => {
-    // Clear localStorage (userType, etc) and redirect
     localStorage.removeItem('userType');
     setUserType(null);
     navigate("/");
