@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useItems, Item } from "@/contexts/ItemContext";
-import { Trash2, Upload, Image } from "lucide-react";
+import { Trash2, Upload, Image, UserRound } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,12 +20,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  // DialogTrigger, // Removed, we don't trigger from inside page
 } from "@/components/ui/dialog";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 export default function FarmerProfile() {
   const { items, addItem, deleteItem } = useItems();
+  const [name, setName] = useState<string>("John Doe"); // Default name
   const [newItem, setNewItem] = useState<{
     name: string;
     price: string;
@@ -83,6 +83,15 @@ export default function FarmerProfile() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-custom-green">My Profile</h1>
+      </div>
+
+      {/* Profile Header with Name */}
+      <div className="flex items-center space-x-4 mb-8">
+        <UserRound className="h-12 w-12 text-custom-green" />
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800">{name}</h2>
+          <p className="text-gray-500">Farmer</p>
+        </div>
       </div>
 
       {/* Add New Item Dialog triggered by sidebar route */}
