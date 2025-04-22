@@ -6,6 +6,11 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    
+    /* Custom colors */
+    --custom-green: 120 58% 25%; /* #1c651b */
+    --custom-yellow: 52 97% 47%; /* #efd101 */
+    --custom-white: 0 0% 100%; /* white */
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
